@@ -5,7 +5,10 @@ class PiaofangSpider(scrapy.Spider):
     name = 'piaofang'
     allowed_domains = ["piaofang.maoyan.com"]
 
-    allowed_idx = 1
+    def __init__(self ,movie_max_id): 
+        if isinstance(movie_max_id ,str):
+            movie_max_id = int(movie_max_id)
+        self.movie_max_id = movie_max_id
 
     def start_requests(self):
         urls = [
@@ -13,7 +16,7 @@ class PiaofangSpider(scrapy.Spider):
         ]
         for url in urls:
             request = scrapy.Request(
-                url=url + str(self.allowed_idx), callback=self.parse)
+                url=url + str(self.movie_max_id), callback=self.parse)
             request.meta['baseurl'] = url
             yield request
 
@@ -24,7 +27,7 @@ class PiaofangSpider(scrapy.Spider):
         next = response.xpath(
             "//h1[@class='nav-header navBarTitle']/text()").extract_first()
 
-        data['_id'] = self.allowed_idx
+        data['_id'] = self.movie_max_id
         data['name'] = response.xpath(
             "//p[@class='info-title ellipsis-1']/text()").extract_first()
         data['category'] = response.xpath(
@@ -47,9 +50,9 @@ class PiaofangSpider(scrapy.Spider):
         yield scrapy.Request(url=response.url + '/allbox', callback=self.parse_dash, meta={'data': data})
 
         if next:
-            self.allowed_idx += 1
+            self.movie_max_id += 1
             request = scrapy.Request(
-                url=base_url + str(self.allowed_idx), callback=self.parse)
+                url=base_url + str(self.movie_max_id), callback=self.parse)
             request.meta['baseurl'] = base_url
             yield request
 
