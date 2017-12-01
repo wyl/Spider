@@ -29,6 +29,7 @@ class MaoyanPiaofangPipeline(object):
         self.client.close()
 
     def process_item(self, item, spider):
+        
         self.db[self.mongo_table].save(dict(item))
 
         return item
