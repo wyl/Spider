@@ -83,8 +83,8 @@ class ProxyMiddleware(object):
         proxy = request.meta['proxy'] 
         spider.logger.warning(f'process_exception {proxy}') 
         try: 
-            req = requests.delete( 
-                'http://127.0.0.1:8888/proxy', data={"proxy": proxy}) 
+            req = requests.put( 
+                'http://127.0.0.1:8888/proxy', data={"proxy": proxy, "inc":-1}) 
             spider.logger.info('[' + req.text + ']') 
         except ValueError: 
             pass 

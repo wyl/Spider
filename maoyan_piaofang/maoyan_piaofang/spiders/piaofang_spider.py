@@ -51,16 +51,17 @@ class PiaofangSpider(scrapy.Spider):
         data['description'] = response.xpath(
             "//div[@class='detail-block-content']/text()").extract_first()
         data['create_date'] = datetime.now()
-        yield scrapy.Request(url=response.url + '/allbox', callback=self.parse_dash, meta={'data': data})
 
         if not has_next: 
             self.break_num += 1
         else:
             self.break_num = 0
+            self.movie_max_id += 1
+            
+            yield scrapy.Request(url=response.url + '/allbox', callback=self.parse_dash, meta={'data': data})
         
         #一直获取，直到超过200 
         if self.break_num < self.break_none_total:
-            self.movie_max_id += 1
             request = scrapy.Request(
                 url=base_url + str(self.movie_max_id), callback=self.parse)
             request.meta['baseurl'] = base_url
