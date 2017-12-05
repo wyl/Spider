@@ -6,7 +6,94 @@
 # http://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
 from scrapy import signals
-
+import requests 
+import base64 
+import random 
+from scrapy.downloadermiddlewares.retry import RetryMiddleware 
+from scrapy.utils.response import response_status_message 
+from scrapy import log 
+ 
+class CustomRetryMiddleware(RetryMiddleware): 
+ 
+    # def process_response(self, request, response, spider): 
+    #     proxy = request.meta['proxy'] 
+    #     spider.logger.info(f"RETRY {proxy}") 
+    #     spider.logger.info(f"RETRY {proxy}") 
+    #     spider.logger.info(f"RETRY {proxy}") 
+    #     print('RETRY',self.max_retry_times) 
+ 
+    #     if response.status in self.retry_http_codes: 
+    #         reason = response_status_message(response.status) 
+    #         return self._retry(request, reason, spider) or response 
+    #     return response 
+     
+    def _retry(self, request, reason, spider): 
+        retries = request.meta.get('retry_times', 0) + 1 
+        proxy = request.meta.get('proxy', None) 
+ 
+        req = requests.put( 
+                'http://127.0.0.1:8888/proxy', data={"proxy": proxy, "inc":-1}) 
+        # print(f" _RETRY {proxy}    "*4) 
+        if retries <= self.max_retry_times: 
+            spider.logger.debug("Retrying %(request)s (failed %(retries)d times): %(reason)s" % dict(request=request, retries=retries, reason=reason)) 
+            # log.msg(format="Retrying %(request)s (failed %(retries)d times): %(reason)s", 
+            #         level=log.DEBUG, spider=spider, request=request, retries=retries, reason=reason) 
+            retryreq = request.copy() 
+            retryreq.meta['retry_times'] = retries 
+            retryreq.dont_filter = True 
+            retryreq.priority = request.priority + self.priority_adjust 
+            return retryreq 
+        else: 
+            # do something with the request: inspect request.meta, look at request.url... 
+ 
+            spider.logger.debug("Gave up retrying %(request)s (failed %(retries)d times): %(reason)s" % dict(request=request, retries=retries, reason=reason)) 
+            # log.msg(format="Gave up retrying %(request)s (failed %(retries)d times): %(reason)s", 
+            #         level=log.DEBUG, spider=spider, request=request, retries=retries, reason=reason) 
+ 
+class RandomUserAgent(object): 
+    """Randomly rotate user agents based on a list of predefined ones""" 
+ 
+    def __init__(self, agents): 
+        self.agents = agents 
+ 
+    @classmethod 
+    def from_crawler(cls, crawler): 
+        return cls(crawler.settings.getlist('USER_AGENTS')) 
+ 
+    def process_request(self, request, spider): 
+        agent = random.choice(self.agents) 
+        request.headers.setdefault('User-Agent', agent) 
+ 
+class ProxyMiddleware(object): 
+    """Round Proxy And Service Proxy  """ 
+ 
+    def process_request(self, request, spider): 
+        req = requests.get('http://127.0.0.1:8888/proxy') 
+        spider.logger.info('[' + req.text + ']') 
+        request.meta['proxy'] = req.text 
+ 
+    def process_response(self,request, response, spider): 
+        proxy = request.meta['proxy'] 
+        req = requests.put( 
+                'http://127.0.0.1:8888/proxy', data={"proxy": proxy, "inc":1}) 
+        return response 
+ 
+ 
+    def process_exception(self, request, exception, spider): 
+        proxy = request.meta['proxy'] 
+        spider.logger.warning(f'process_exception {proxy}') 
+        try: 
+            req = requests.delete( 
+                'http://127.0.0.1:8888/proxy', data={"proxy": proxy}) 
+            spider.logger.info('[' + req.text + ']') 
+        except ValueError: 
+            pass 
+        req = requests.get('http://127.0.0.1:8888/proxy') 
+        spider.logger.info('['+req.text+']') 
+        request.meta['proxy'] = req.text 
+        return request 
+ 
+ 
 
 class MaoyanPiaofangSpiderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,

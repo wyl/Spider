@@ -5,9 +5,9 @@ class PiaofangSpider(scrapy.Spider):
     name = 'piaofang'
     allowed_domains = ["piaofang.maoyan.com"]
     
-    break_none_total = 2000
+    break_none_total = 20
 
-    def __init__(self ,movie_max_id): 
+    def __init__(self ,movie_max_id=1): 
 
         self.break_num = 0
         if isinstance(movie_max_id ,str):
@@ -28,6 +28,7 @@ class PiaofangSpider(scrapy.Spider):
         print(response.meta)
         base_url = response.meta['baseurl']
         data = dict()
+        data['proxy'] = response.meta['proxy'] 
         has_next = response.xpath(
             "//h1[@class='nav-header navBarTitle']/text()").extract_first()
 
