@@ -25,7 +25,6 @@ class PiaofangSpider(scrapy.Spider):
             yield request
 
     def parse(self, response):
-        print(response.meta)
         base_url = response.meta['baseurl']
         data = dict()
         data['proxy'] = response.meta['proxy'] 
@@ -52,17 +51,15 @@ class PiaofangSpider(scrapy.Spider):
             "//div[@class='detail-block-content']/text()").extract_first()
         data['create_date'] = datetime.now()
         
-        
         self.movie_max_id += 1
         if not has_next: 
             self.break_num += 1
         else:
-            self.break_num = 0
+            self.break_num = 0 
             yield scrapy.Request(url=response.url + '/allbox', callback=self.parse_dash, meta={'data': data})
 
         #一直获取，直到超过20 
         if self.break_num < self.break_none_total:
-            
             request = scrapy.Request(
                 url=base_url + str(self.movie_max_id), callback=self.parse)
             request.meta['baseurl'] = base_url

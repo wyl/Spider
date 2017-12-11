@@ -99,6 +99,8 @@ ITEM_PIPELINES = {
 MONGO_URI = 'mongodb://proxy_mongo_host:27017'
 MONGO_DATABASE = 'piaofang'
 MONGO_TABLE = 'maoyan' 
+
+PROXY_HOST = 'http://127.0.0.1:8888'
  
  
 USER_AGENTS = [ 

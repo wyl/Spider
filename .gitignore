@@ -4,3 +4,5 @@ maoyan_piaofang/maoyan_piaofang/__pycache__/
 maoyan_piaofang/\.vscode/
 
 *.pyc
+
+maoyan_piaofang/maoyan_piaofang/spiders/test_spider\.py
