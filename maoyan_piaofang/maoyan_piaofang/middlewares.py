@@ -92,12 +92,12 @@ class ProxyMiddleware(object):
 
     def process_exception(self, request, exception, spider):
         spider.logger.debug('使用代理出现异常，重试')
-        proxy = request.meta['proxy']
-        try:
-            req = requests.put(
-                f'{proxy_host}/proxy', data={"proxy": proxy, "inc": -1})
-        except ValueError:
-            pass
+        # proxy = request.meta['proxy']
+        # try:
+        #     req = requests.put(
+        #         f'{proxy_host}/proxy', data={"proxy": proxy, "inc": -1})
+        # except ValueError:
+        #     pass
             
         # spider.logger.debug('使用Proxy have Exception Retry')
         # req = requests.get(f'{self.proxy_host}/proxy')

@@ -5,7 +5,7 @@ class PiaofangSpider(scrapy.Spider):
     name = 'piaofang'
     allowed_domains = ["piaofang.maoyan.com"]
     
-    break_none_total = 20
+    break_none_total = 20000
 
     def __init__(self ,movie_max_id=1): 
 
@@ -51,12 +51,14 @@ class PiaofangSpider(scrapy.Spider):
             "//div[@class='detail-block-content']/text()").extract_first()
         data['create_date'] = datetime.now()
         
+        yield scrapy.Request(url=response.url + '/allbox', callback=self.parse_dash, meta={'data': data})
+
         self.movie_max_id += 1
         if not has_next: 
             self.break_num += 1
         else:
             self.break_num = 0 
-            yield scrapy.Request(url=response.url + '/allbox', callback=self.parse_dash, meta={'data': data})
+            
 
         #一直获取，直到超过20 
         if self.break_num < self.break_none_total:
