@@ -28,7 +28,6 @@ class PiaofangSpider(scrapy.Spider):
                 url=url + str(self.movie_max_id), callback=self.parse ,meta={'baseurl': url})
     
     def parse(self, response):
-
         base_url = response.meta['baseurl']
         data = dict()
         data['proxy'] = response.meta['proxy']

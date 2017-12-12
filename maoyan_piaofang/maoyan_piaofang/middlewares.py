@@ -38,11 +38,10 @@ class CustomRetryMiddleware(RetryMiddleware):
         # print(f" _RETRY {proxy}    "*4)
         if retries <= self.max_retry_times:
             req = requests.get(f'{proxy_host}/proxy')
-
-            spider.logger.debug("Retrying %(request)s (failed %(retries)d times): %(reason)s" % dict(
-                request=request, retries=retries, reason=reason))
-            # log.msg(format="Retrying %(request)s (failed %(retries)d times): %(reason)s",
-            #         level=log.DEBUG, spider=spider, request=request, retries=retries, reason=reason)
+            # spider.logger.debug("Retrying %(request)s (failed %(retries)d times): %(reason)s" % dict(
+            #     request=request, retries=retries, reason=reason))
+            log.msg(format="_ _ _ _ _ _ _ Retrying %(request)s (failed %(retries)d times): %(reason)s",
+                    level=log.DEBUG, spider=spider, request=request, retries=retries, reason=reason)
             retryreq = request.copy()
             retryreq.meta['proxy'] = req.text
             retryreq.meta['retry_times'] = retries
@@ -52,11 +51,10 @@ class CustomRetryMiddleware(RetryMiddleware):
         else:
             # do something with the request: inspect request.meta, look at request.url...
 
-            spider.logger.debug("Gave up retrying %(request)s (failed %(retries)d times): %(reason)s" % dict(
+            spider.logger.debug("_ _ _ _ _ _ _ Gave up retrying %(request)s (failed %(retries)d times): %(reason)s" % dict(
                 request=request, retries=retries, reason=reason))
             # log.msg(format="Gave up retrying %(request)s (failed %(retries)d times): %(reason)s",
             #         level=log.DEBUG, spider=spider, request=request, retries=retries, reason=reason)
-
 
 class RandomUserAgent(object):
     """Randomly rotate user agents based on a list of predefined ones"""
@@ -73,7 +71,6 @@ class RandomUserAgent(object):
         spider.logger.debug(f'\t  >>>>>>>  申请使用UserAgent {request.url}   {agent}')
         request.headers.setdefault('User-Agent', agent)
 
-
 class ProxyMiddleware(object):
     """Round Proxy And Service Proxy  """
 
@@ -83,7 +80,8 @@ class ProxyMiddleware(object):
         spider.logger.debug(f'\t  >>>>>>>  申请使用代理 {request.url}   {req.text}')
 
     def process_response(self, request, response, spider): 
-        
+        request.headers
+        spider.logger.debug(f'\t  <<<<<<<  HEADERS   {request.headers} ')
         proxy = request.meta.get('proxy' , '')
         spider.logger.debug(f'\t  <<<<<<<  请求成功并返回，Proxy {request.url}   {proxy}')
         if proxy:

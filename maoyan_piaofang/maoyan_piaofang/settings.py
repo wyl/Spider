@@ -27,7 +27,8 @@ ROBOTSTXT_OBEY = False
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
 DOWNLOAD_DELAY = 6
-DOWNLOAD_TIMEOUT = 10 
+DOWNLOAD_TIMEOUT = 20 
+
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -101,7 +102,6 @@ MONGO_DATABASE = 'piaofang'
 MONGO_TABLE = 'maoyan' 
 
 PROXY_HOST = 'http://127.0.0.1:8888'
- 
  
 USER_AGENTS = [ 
  "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; AcooBrowser; .NET CLR 1.1.4322; .NET CLR 2.0.50727)", 
