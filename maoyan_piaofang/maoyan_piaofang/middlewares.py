@@ -29,7 +29,6 @@ class CustomRetryMiddleware(RetryMiddleware):
     #     return response
 
     def _retry(self, request, reason, spider):
-        spider.logger.debug(f'返回状态不正确，Retry {request.url}')
         retries = request.meta.get('retry_times', 0) + 1
         proxy = request.meta.get('proxy', None)
         
