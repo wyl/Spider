@@ -35,7 +35,7 @@ class CustomRetryMiddleware(RetryMiddleware):
         
         spider.logger.debug(f'\t  @@@@@@@  Retry {reason} {request.url}   {proxy}')
         req = requests.put(
-            f'{proxy_host}/proxy', data={"proxy": proxy, "inc": -1})
+            f'{proxy_host}/proxy/-1', data={"proxy": proxy})
         # print(f" _RETRY {proxy}    "*4)
         if retries <= self.max_retry_times:
             req = requests.get(f'{proxy_host}/proxy')
@@ -88,7 +88,7 @@ class ProxyMiddleware(object):
         spider.logger.debug(f'\t  <<<<<<<  请求成功并返回，Proxy {request.url}   {proxy}')
         if proxy:
             req = requests.put(
-                f'{proxy_host}/proxy', data={"proxy": proxy, "inc": 1})
+                f'{proxy_host}/proxy/1', data={"proxy": proxy})
         return response
 
     def process_exception(self, request, exception, spider):
@@ -96,7 +96,7 @@ class ProxyMiddleware(object):
         spider.logger.debug(f'\t  =======  使用代理出现异常 {request.url}   {proxy}')
         try:
             req = requests.put(
-                f'{proxy_host}/proxy', data={"proxy": proxy, "inc": -1})
+                f'{proxy_host}/proxy/-1', data={"proxy": proxy})
         except ValueError:
             pass
         # spider.logger.debug('使用Proxy have Exception Retry')
