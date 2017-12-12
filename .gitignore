@@ -6,3 +6,5 @@ maoyan_piaofang/\.vscode/
 *.pyc
 
 maoyan_piaofang/maoyan_piaofang/spiders/test_spider\.py
+
+maoyan_piaofang/test\.py

@@ -27,7 +27,7 @@ ROBOTSTXT_OBEY = False
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
 DOWNLOAD_DELAY = 6
-DOWNLOAD_TIMEOUT = 20 
+DOWNLOAD_TIMEOUT = 10 
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -57,7 +57,7 @@ DOWNLOADER_MIDDLEWARES = {
     # 'scrapy.contrib.downloadermiddleware.httpproxy.HttpProxyMiddleware':543, 
     'maoyan_piaofang.middlewares.ProxyMiddleware': 100, 
     'scrapy.downloadermiddlewares.retry.RetryMiddleware': None, 
-    'maoyan_piaofang.middlewares.CustomRetryMiddleware': 550, 
+    # 'maoyan_piaofang.middlewares.CustomRetryMiddleware': 550, 
     'maoyan_piaofang.middlewares.RandomUserAgent':1  , 
 } 
 
