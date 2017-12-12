@@ -29,11 +29,11 @@ class CustomRetryMiddleware(RetryMiddleware):
     #     return response
 
     def _retry(self, request, reason, spider):
-        
         spider.logger.debug(f'返回状态不正确，Retry {request.url}')
         retries = request.meta.get('retry_times', 0) + 1
         proxy = request.meta.get('proxy', None)
-
+        
+        spider.logger.debug(f'\t  @@@@@@@  Retry {reason} {request.url}   {proxy}')
         req = requests.put(
             f'{proxy_host}/proxy', data={"proxy": proxy, "inc": -1})
         # print(f" _RETRY {proxy}    "*4)
@@ -78,27 +78,27 @@ class ProxyMiddleware(object):
     """Round Proxy And Service Proxy  """
 
     def process_request(self, request, spider):
-        spider.logger.debug(f'为每个请求申请 Proxy {request.url}')
         req = requests.get(f'{proxy_host}/proxy')
         request.meta['proxy'] = req.text
+        spider.logger.debug(f'\t  >>>>>>>  申请使用代理 {request.url}   {req.text}')
 
-    def process_response(self, request, response, spider):
-        spider.logger.debug(f'请求成功并返回，Proxy Inc  {request.url}')
+    def process_response(self, request, response, spider): 
+        
         proxy = request.meta.get('proxy' , '')
+        spider.logger.debug(f'\t  <<<<<<<  请求成功并返回，Proxy {request.url}   {proxy}')
         if proxy:
             req = requests.put(
                 f'{proxy_host}/proxy', data={"proxy": proxy, "inc": 1})
         return response
 
     def process_exception(self, request, exception, spider):
-        spider.logger.debug(f'使用代理出现异常，重试 {request.url}')
         proxy = request.meta['proxy']
+        spider.logger.debug(f'\t  =======  使用代理出现异常 {request.url}   {proxy}')
         try:
             req = requests.put(
                 f'{proxy_host}/proxy', data={"proxy": proxy, "inc": -1})
         except ValueError:
             pass
-            
         # spider.logger.debug('使用Proxy have Exception Retry')
         # req = requests.get(f'{self.proxy_host}/proxy')
         # request.meta['proxy'] = req.text
