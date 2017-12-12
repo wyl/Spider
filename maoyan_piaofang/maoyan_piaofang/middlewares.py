@@ -70,6 +70,7 @@ class RandomUserAgent(object):
 
     def process_request(self, request, spider):
         agent = random.choice(self.agents)
+        spider.logger.debug(f'\t  >>>>>>>  申请使用UserAgent {request.url}   {agent}')
         request.headers.setdefault('User-Agent', agent)
 
 
