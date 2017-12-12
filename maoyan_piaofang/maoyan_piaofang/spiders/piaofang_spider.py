@@ -28,6 +28,12 @@ class PiaofangSpider(scrapy.Spider):
                 url=url + str(self.movie_max_id), callback=self.parse ,meta={'baseurl': url})
     
     def parse(self, response):
+
+        
+        if response.status in [404, 500, 403] :
+            yield scrapy.Request(
+                url=base_url + str(self.movie_max_id), callback=self.parse , meta={'baseurl': base_url})
+
         base_url = response.meta['baseurl']
         data = dict()
         data['proxy'] = response.meta['proxy']
