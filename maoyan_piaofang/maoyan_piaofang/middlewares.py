@@ -15,48 +15,48 @@ from scrapy import log
 from maoyan_piaofang.settings import PROXY_HOST as proxy_host
 
 
-# class CustomRetryMiddleware(RetryMiddleware): 
-#     # def process_response(self, request, response, spider):
-#     #     proxy = request.meta['proxy']
-#     #     spider.logger.info(f"RETRY {proxy}")
-#     #     spider.logger.info(f"RETRY {proxy}")
-#     #     spider.logger.info(f"RETRY {proxy}")
-#     #     print('RETRY',self.max_retry_times)
+class CustomRetryMiddleware(RetryMiddleware): 
+    # def process_response(self, request, response, spider):
+    #     proxy = request.meta['proxy']
+    #     spider.logger.info(f"RETRY {proxy}")
+    #     spider.logger.info(f"RETRY {proxy}")
+    #     spider.logger.info(f"RETRY {proxy}")
+    #     print('RETRY',self.max_retry_times)
 
-#     #     if response.status in self.retry_http_codes:
-#     #         reason = response_status_message(response.status)
-#     #         return self._retry(request, reason, spider) or response
-#     #     return response
+    #     if response.status in self.retry_http_codes:
+    #         reason = response_status_message(response.status)
+    #         return self._retry(request, reason, spider) or response
+    #     return response
 
-#     def _retry(self, request, reason, spider):
+    def _retry(self, request, reason, spider):
         
-#         spider.logger.debug(f'返回状态不正确，Retry {request.url}')
-#         retries = request.meta.get('retry_times', 0) + 1
-#         proxy = request.meta.get('proxy', None)
+        spider.logger.debug(f'返回状态不正确，Retry {request.url}')
+        retries = request.meta.get('retry_times', 0) + 1
+        proxy = request.meta.get('proxy', None)
 
-#         req = requests.put(
-#             f'{proxy_host}/proxy', data={"proxy": proxy, "inc": -1})
-#         # print(f" _RETRY {proxy}    "*4)
-#         if retries <= self.max_retry_times:
-#             req = requests.get(f'{proxy_host}/proxy')
+        req = requests.put(
+            f'{proxy_host}/proxy', data={"proxy": proxy, "inc": -1})
+        # print(f" _RETRY {proxy}    "*4)
+        if retries <= self.max_retry_times:
+            req = requests.get(f'{proxy_host}/proxy')
 
-#             spider.logger.debug("Retrying %(request)s (failed %(retries)d times): %(reason)s" % dict(
-#                 request=request, retries=retries, reason=reason))
-#             # log.msg(format="Retrying %(request)s (failed %(retries)d times): %(reason)s",
-#             #         level=log.DEBUG, spider=spider, request=request, retries=retries, reason=reason)
-#             retryreq = request.copy()
-#             retryreq.meta['proxy'] = req.text
-#             retryreq.meta['retry_times'] = retries
-#             retryreq.dont_filter = True
-#             retryreq.priority = request.priority + self.priority_adjust
-#             return retryreq
-#         else:
-#             # do something with the request: inspect request.meta, look at request.url...
+            spider.logger.debug("Retrying %(request)s (failed %(retries)d times): %(reason)s" % dict(
+                request=request, retries=retries, reason=reason))
+            # log.msg(format="Retrying %(request)s (failed %(retries)d times): %(reason)s",
+            #         level=log.DEBUG, spider=spider, request=request, retries=retries, reason=reason)
+            retryreq = request.copy()
+            retryreq.meta['proxy'] = req.text
+            retryreq.meta['retry_times'] = retries
+            retryreq.dont_filter = True
+            retryreq.priority = request.priority + self.priority_adjust
+            return retryreq
+        else:
+            # do something with the request: inspect request.meta, look at request.url...
 
-#             spider.logger.debug("Gave up retrying %(request)s (failed %(retries)d times): %(reason)s" % dict(
-#                 request=request, retries=retries, reason=reason))
-#             # log.msg(format="Gave up retrying %(request)s (failed %(retries)d times): %(reason)s",
-#             #         level=log.DEBUG, spider=spider, request=request, retries=retries, reason=reason)
+            spider.logger.debug("Gave up retrying %(request)s (failed %(retries)d times): %(reason)s" % dict(
+                request=request, retries=retries, reason=reason))
+            # log.msg(format="Gave up retrying %(request)s (failed %(retries)d times): %(reason)s",
+            #         level=log.DEBUG, spider=spider, request=request, retries=retries, reason=reason)
 
 
 class RandomUserAgent(object):

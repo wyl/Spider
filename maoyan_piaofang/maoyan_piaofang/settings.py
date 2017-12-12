@@ -57,7 +57,7 @@ DOWNLOADER_MIDDLEWARES = {
     # 'scrapy.contrib.downloadermiddleware.httpproxy.HttpProxyMiddleware':543, 
     'maoyan_piaofang.middlewares.ProxyMiddleware': 100, 
     'scrapy.downloadermiddlewares.retry.RetryMiddleware': None, 
-    # 'maoyan_piaofang.middlewares.CustomRetryMiddleware': 550, 
+    'maoyan_piaofang.middlewares.CustomRetryMiddleware': 550, 
     'maoyan_piaofang.middlewares.RandomUserAgent':1  , 
 } 
 
