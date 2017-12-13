@@ -18,20 +18,17 @@ class PiaofangSpider(scrapy.Spider):
     def start_requests(self):
         # urls=['http://piaofang.maoyan.com/netmovie/']
         urls = []
-        for url_prfix in range(1,12):
+        for url_prfix in range(self.movie_max_id ,1203491):
             urls.append(f'http://piaofang.maoyan.com/netmovie/{url_prfix}')
         
         for url in urls:
-            yield scrapy.Request(
-                url=url + str(self.movie_max_id), callback=self.parse ,meta={'baseurl': url})
+            yield scrapy.Request(url=url,callback=self.parse})
     
     def parse(self, response):
-        base_url = response.meta['baseurl']
 
-        movie_id = os.path.basename(base_url) + str(self.movie_max_id).zfill(5)
+        movie_id = os.path.basename(response.url) 
         if response.status in [404, 500, 403] :
-            yield scrapy.Request(
-                url=base_url + movie_id, callback=self.parse , meta={'baseurl': base_url})
+            yield scrapy.Request(url=request.url, callback=self.parse })
 
         data = dict()
         data['proxy'] = response.meta['proxy']
@@ -61,8 +58,8 @@ class PiaofangSpider(scrapy.Spider):
         self.movie_max_id += 1
 
         # if self.break_num < self.break_none_total:
-        yield scrapy.Request(
-            url=base_url + movie_id, callback=self.parse , meta={'baseurl': base_url})
+        #yield scrapy.Request(
+        #    url=base_url + str(self.movie_max_id).zfill(5) , callback=self.parse , meta={'baseurl': base_url})
 
         if not has_next:
             self.break_num += 1
