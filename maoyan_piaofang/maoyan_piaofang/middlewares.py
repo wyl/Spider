@@ -93,9 +93,10 @@ class ProxyMiddleware(object):
         if 'MaoYan Access Control System' in response.text or not has_next : 
             spider.logger.debug(f'\t  2.1 >>>><<<<  Access Control System  | [{has_next}]    >>>>>  POST  -1')
             requests.put(f'{proxy_host}/proxy/-1', data={"proxy": proxy})
+            return request
         else:
             requests.put(f'{proxy_host}/proxy/1', data={"proxy": proxy})
-        return response
+            return response
 
     def process_exception(self, request, exception, spider):
         proxy = request.meta['proxy']
