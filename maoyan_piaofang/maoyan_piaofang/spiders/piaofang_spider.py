@@ -22,13 +22,13 @@ class PiaofangSpider(scrapy.Spider):
             urls.append(f'http://piaofang.maoyan.com/netmovie/{url_prfix}')
         
         for url in urls:
-            yield scrapy.Request(url=url,callback=self.parse})
+            yield scrapy.Request(url=url,callback=self.parse)
     
     def parse(self, response):
 
         movie_id = os.path.basename(response.url) 
         if response.status in [404, 500, 403] :
-            yield scrapy.Request(url=request.url, callback=self.parse })
+            yield scrapy.Request(url=response.url, callback=self.parse)
 
         data = dict()
         data['proxy'] = response.meta['proxy']
