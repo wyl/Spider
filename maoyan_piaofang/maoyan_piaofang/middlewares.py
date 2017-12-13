@@ -15,7 +15,7 @@ from scrapy import log
 from maoyan_piaofang.settings import PROXY_HOST as proxy_host
 
 
-class CustomRetryMiddleware(RetryMiddleware): 
+class CustomRetryMiddleware(RetryMiddleware):
     # def process_response(self, request, response, spider):
     #     proxy = request.meta['proxy']
     #     spider.logger.info(f"RETRY {proxy}")
@@ -31,7 +31,7 @@ class CustomRetryMiddleware(RetryMiddleware):
     def _retry(self, request, reason, spider):
         retries = request.meta.get('retry_times', 0) + 1
         proxy = request.meta.get('proxy', None)
-        
+
         spider.logger.debug(f'\t  @@@@@@@  Retry {reason} {request.url}   {proxy}')
         req = requests.put(
             f'{proxy_host}/proxy/-1', data={"proxy": proxy})
@@ -56,6 +56,7 @@ class CustomRetryMiddleware(RetryMiddleware):
             # log.msg(format="Gave up retrying %(request)s (failed %(retries)d times): %(reason)s",
             #         level=log.DEBUG, spider=spider, request=request, retries=retries, reason=reason)
 
+
 class RandomUserAgent(object):
     """Randomly rotate user agents based on a list of predefined ones"""
 
@@ -70,6 +71,7 @@ class RandomUserAgent(object):
         agent = random.choice(self.agents)
         request.headers.setdefault('User-Agent', agent)
 
+
 class ProxyMiddleware(object):
     """Round Proxy And Service Proxy  """
 
@@ -78,16 +80,21 @@ class ProxyMiddleware(object):
         request.meta['proxy'] = req.text
         spider.logger.debug(f'\t  1.>>>>>>>  申请使用代理 {request.url}   {req.text}')
 
-    def process_response(self, request, response, spider): 
-        proxy = request.meta.get('proxy' , '')
-        spider.logger.debug(f'\t  2.<<<<<<<  请求成功并返回，Proxy {request.url}   {proxy} {response.status} {response.text[:300]}')
-        if 'MaoYan Access Control System' in response.text:
-            spider.logger.debug(f'\t  2.1 >>>><<<<  Access Control System POST  -1')
-            req = requests.put(
-                f'{proxy_host}/proxy/-1', data={"proxy": proxy})
+    def process_response(self, request, response, spider):
+        proxy = request.meta.get('proxy', '')
+
+        title = response.xpath(
+            "//title/text()").extract_first()
+
+        has_next = response.xpath(
+            "//h1[@class='nav-header navBarTitle']/text()").extract_first()
+        spider.logger.debug(f'\t  2.<<<<<<<  请求成功并返回，Proxy {request.url}   {proxy} {response.status} {title}')
+
+        if 'MaoYan Access Control System' in response.text or not has_next : 
+            spider.logger.debug(f'\t  2.1 >>>><<<<  Access Control System  | [{has_next}]    >>>>>  POST  -1')
+            requests.put(f'{proxy_host}/proxy/-1', data={"proxy": proxy})
         else:
-            req = requests.put(
-                f'{proxy_host}/proxy/1', data={"proxy": proxy})
+            requests.put(f'{proxy_host}/proxy/1', data={"proxy": proxy})
         return response
 
     def process_exception(self, request, exception, spider):

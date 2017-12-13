@@ -1,14 +1,12 @@
 import scrapy
-from datetime import datetime
 import requests
+import os 
 from lxml import etree
-
+from datetime import datetime
 
 class PiaofangSpider(scrapy.Spider):
     name = 'piaofang'
     allowed_domains = ["piaofang.maoyan.com"]
-
-    break_none_total = 20000
 
     def __init__(self, movie_max_id=1):
 
@@ -18,10 +16,10 @@ class PiaofangSpider(scrapy.Spider):
         self.movie_max_id = movie_max_id
 
     def start_requests(self):
-        urls=['http://piaofang.maoyan.com/netmovie/']
-        # urls = []
-        # for url_prfix in range(1,10):
-        #     urls.append(f'http://piaofang.maoyan.com/netmovie/{url_prfix}')
+        # urls=['http://piaofang.maoyan.com/netmovie/']
+        urls = []
+        for url_prfix in range(1,12):
+            urls.append(f'http://piaofang.maoyan.com/netmovie/{url_prfix}')
         
         for url in urls:
             yield scrapy.Request(
@@ -30,16 +28,17 @@ class PiaofangSpider(scrapy.Spider):
     def parse(self, response):
         base_url = response.meta['baseurl']
 
+        movie_id = os.path.basename(base_url) + str(self.movie_max_id).zfill(5)
         if response.status in [404, 500, 403] :
             yield scrapy.Request(
-                url=base_url + str(self.movie_max_id), callback=self.parse , meta={'baseurl': base_url})
+                url=base_url + movie_id, callback=self.parse , meta={'baseurl': base_url})
 
         data = dict()
         data['proxy'] = response.meta['proxy']
         has_next = response.xpath(
             "//h1[@class='nav-header navBarTitle']/text()").extract_first()
 
-        data['_id'] = self.movie_max_id
+        data['_id'] = movie_id 
         data['name'] = response.xpath(
             "//p[@class='info-title ellipsis-1']/text()").extract_first()
         data['category'] = response.xpath(
@@ -61,9 +60,9 @@ class PiaofangSpider(scrapy.Spider):
         
         self.movie_max_id += 1
 
-        if self.break_num < self.break_none_total:
-            yield scrapy.Request(
-                url=base_url + str(self.movie_max_id), callback=self.parse , meta={'baseurl': base_url})
+        # if self.break_num < self.break_none_total:
+        yield scrapy.Request(
+            url=base_url + movie_id, callback=self.parse , meta={'baseurl': base_url})
 
         if not has_next:
             self.break_num += 1
