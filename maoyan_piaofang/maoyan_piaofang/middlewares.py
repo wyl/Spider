@@ -80,9 +80,12 @@ class ProxyMiddleware(object):
 
     def process_response(self, request, response, spider): 
         proxy = request.meta.get('proxy' , '')
-        spider.logger.debug(f'\t  2.<<<<<<<  请求成功并返回，Proxy {request.url}   {proxy}  {response.text} {response.status} {response.text[:300]}')
-        spider.logger.info(request.text)
-        if proxy:
+        spider.logger.debug(f'\t  2.<<<<<<<  请求成功并返回，Proxy {request.url}   {proxy} {response.status} {response.text[:300]}')
+        if 'MaoYan Access Control System' in response.text:
+            spider.logger.debug(f'\t  2.1 >>>><<<<  Access Control System POST  -1')
+            req = requests.put(
+                f'{proxy_host}/proxy/-1', data={"proxy": proxy})
+        else:
             req = requests.put(
                 f'{proxy_host}/proxy/1', data={"proxy": proxy})
         return response
