@@ -68,7 +68,6 @@ class RandomUserAgent(object):
 
     def process_request(self, request, spider):
         agent = random.choice(self.agents)
-        spider.logger.debug(f'\t  >>>>>>>  申请使用UserAgent {request.url}   {agent}')
         request.headers.setdefault('User-Agent', agent)
 
 class ProxyMiddleware(object):
@@ -77,13 +76,12 @@ class ProxyMiddleware(object):
     def process_request(self, request, spider):
         req = requests.get(f'{proxy_host}/proxy')
         request.meta['proxy'] = req.text
-        spider.logger.debug(f'\t  >>>>>>>  申请使用代理 {request.url}   {req.text}')
+        spider.logger.debug(f'\t  1.>>>>>>>  申请使用代理 {request.url}   {req.text}')
 
     def process_response(self, request, response, spider): 
-        request.headers
-        spider.logger.debug(f'\t  <<<<<<<  HEADERS   {request.headers} ')
         proxy = request.meta.get('proxy' , '')
-        spider.logger.debug(f'\t  <<<<<<<  请求成功并返回，Proxy {request.url}   {proxy}')
+        spider.logger.debug(f'\t  2.<<<<<<<  请求成功并返回，Proxy {request.url}   {proxy}  {response.text} {response.status} {response.text[:300]}')
+        spider.logger.info(request.text)
         if proxy:
             req = requests.put(
                 f'{proxy_host}/proxy/1', data={"proxy": proxy})
