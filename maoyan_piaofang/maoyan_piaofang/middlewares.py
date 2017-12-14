@@ -85,13 +85,10 @@ class ProxyMiddleware(object):
 
         title = response.xpath(
             "//title/text()").extract_first()
-
-        has_next = response.xpath(
-            "//h1[@class='nav-header navBarTitle']/text()").extract_first()
         spider.logger.debug(f'\t  2.<<<<<<<  请求成功并返回，Proxy {request.url}   {proxy} {response.status} {title}')
 
-        if 'MaoYan Access Control System' in response.text or not has_next : 
-            spider.logger.debug(f'\t  2.1 >>>><<<<  Access Control System  | [{has_next}]    >>>>>  POST  -1')
+        if 'MaoYan Access Control System' in response.text : 
+            spider.logger.debug(f'\t  2.1 >>>><<<<  Access Control System   >>>>>  POST  -1')
             requests.put(f'{proxy_host}/proxy/-1', data={"proxy": proxy})
             return request
         else:
