@@ -37,7 +37,7 @@ def start():
         classes = dir(module)
         remove(classes, ['__builtins__', '__cached__', '__doc__', '__file__',
                          'ProxyPoolItem', '__loader__', '__name__', '__package__', '__spec__', 'scrapy'])
-        runner.crawl(getattr(module, filter(classes)))
+        runner.crawl(getattr(module, filter(classes)), **{'movie_max_id': sys.argv[1] })
     d = runner.join()
     d.addBoth(lambda _: reactor.stop())
     reactor.run()
