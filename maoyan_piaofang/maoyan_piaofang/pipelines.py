@@ -29,7 +29,9 @@ class MaoyanPiaofangPipeline(object):
         self.client.close()
 
     def process_item(self, item, spider):
-        
-        self.db[self.mongo_table].save(dict(item))
-
+        item = dict(item)
+        id = item['_id']
+        save_values = item 
+        del item['_id']
+        self.db[self.mongo_table].update({'_id': id} , {'$set' : save_values} , True ,False )
         return item
