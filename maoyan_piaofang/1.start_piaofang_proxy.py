@@ -26,8 +26,10 @@ def filter(classes):
 
 def start():
     """begin spider to get proxy """
-    base_name = os.path.dirname(sys.argv[0])
-    sys.path.append(base_name + '/maoyan_piaofang/spiders/')    
+    #base_name = os.path.dirname(sys.argv[0])
+    base_name = os.getcwd()
+    sys.path.append(base_name + '/maoyan_piaofang/spiders/')   
+    print(base_name + '/maoyan_piaofang/spiders/') 
     files = os.listdir(base_name + '/maoyan_piaofang/spiders/')
     remove(files, ['__init__.py', '__pycache__', '__init__.pyc', ])
     runner = CrawlerRunner(get_project_settings())
