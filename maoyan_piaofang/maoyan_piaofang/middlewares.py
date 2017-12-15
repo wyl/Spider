@@ -85,7 +85,7 @@ class ProxyMiddleware(object):
 
         title = response.xpath(
             "//title/text()").extract_first()
-        spider.logger.debug(f'\t  2.<<<<<<<  请求成功并返回，Proxy {request.url}   {proxy} {response.status} {title} {response.text[:1500]}')
+        spider.logger.debug(f'\t  2.<<<<<<<  请求成功并返回，Proxy {request.url}   {proxy} {response.status} {title} {response.text}')
 
         if 'MaoYan Access Control System' in response.text or not title or 'Page Not found' in title or '网站访问报错' in title: 
             spider.logger.debug(f'\t  2.1 >>>><<<<  Access Control System   >>>>>  POST  -1')
