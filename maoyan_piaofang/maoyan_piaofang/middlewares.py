@@ -34,7 +34,7 @@ class CustomRetryMiddleware(RetryMiddleware):
 
         spider.logger.debug(f'\t  @@@@@@@  Retry {reason} {request.url}   {proxy}')
         req = requests.put(
-            f'{proxy_host}/proxy/-1', data={"proxy": proxy})
+            f'{proxy_host}/proxy/-3', data={"proxy": proxy})
         # print(f" _RETRY {proxy}    "*4)
         if retries <= self.max_retry_times:
             req = requests.get(f'{proxy_host}/proxy')
@@ -87,9 +87,9 @@ class ProxyMiddleware(object):
             "//title/text()").extract_first()
         spider.logger.debug(f'\t  2.<<<<<<<  请求成功并返回，Proxy {request.url}   {proxy} {response.status} {title}')
 
-        if 'MaoYan Access Control System' in response.text : 
+        if 'MaoYan Access Control System' in response.text or 'Page Not found' in title: 
             spider.logger.debug(f'\t  2.1 >>>><<<<  Access Control System   >>>>>  POST  -1')
-            requests.put(f'{proxy_host}/proxy/-1', data={"proxy": proxy})
+            requests.put(f'{proxy_host}/proxy/-10', data={"proxy": proxy})
             return request
         else:
             requests.put(f'{proxy_host}/proxy/1', data={"proxy": proxy})
@@ -100,7 +100,7 @@ class ProxyMiddleware(object):
         spider.logger.debug(f'\t  =======  使用代理出现异常 {request.url}   {proxy}')
         try:
             req = requests.put(
-                f'{proxy_host}/proxy/-1', data={"proxy": proxy})
+                f'{proxy_host}/proxy/-10', data={"proxy": proxy})
         except ValueError:
             pass
         # spider.logger.debug('使用Proxy have Exception Retry')
