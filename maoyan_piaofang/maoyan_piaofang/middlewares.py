@@ -87,7 +87,7 @@ class ProxyMiddleware(object):
         title_combine = ''.join(title)
         spider.logger.debug(f'\t  2.<<<<<<<  请求成功并返回，Proxy {request.url}   {proxy} {response.status} {title} {response.text[:200]}')
         
-        if 'MaoYan Access Control System' in response.text or title_combine != ''   or 'Page Not found' in title_combine or '网站访问报错' in title_combine: 
+        if 'MaoYan Access Control System' in response.text or title_combine == ''   or 'Page Not found' in title_combine or '网站访问报错' in title_combine: 
             spider.logger.debug(f'\t  2.1 >>>><<<<  Access Control System   >>>>>  POST  -1')
             requests.put(f'{proxy_host}/proxy/-10', data={"proxy": proxy})
             return request
