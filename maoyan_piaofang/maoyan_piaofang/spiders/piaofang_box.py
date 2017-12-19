@@ -30,8 +30,14 @@ class PiaofangSpider(scrapy.Spider):
             "//div[@class='t-table']/div[@class='t-left']/div[@class='t-row']/@data-id")
         dash_days_piaofang = response.xpath(
             "//div[@class='t-table']/div[@class='t-right t-scroller']//div[@class='t-row']/div//text()")
+        dash_days = [day.extract() for day in dash_days]
+        dash_days_piaofang = [daypiao.extract() for daypiao in dash_days_piaofang]
+        #tmp_dash_data =dict( 
+        #        zip([day.extract() for day in dash_days], [daypiao.extract() for daypiao in dash_days_piaofang])
+        #)
+        tmp_dash_data = []
+        for i in range(0, len(dash_days)):
+            tmp_dash_data.append({'date': dash_days[i] , 'val' : dash_days_piaofang })
 
-        tmp_dash_data = dict(
-            zip([day.extract() for day in dash_days], [daypiao.extract() for daypiao in dash_days_piaofang]))
         data['dash'] = tmp_dash_data
         yield data
