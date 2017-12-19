@@ -17,7 +17,7 @@ class PiaofangSpider(scrapy.Spider):
     def start_requests(self):
         # urls=['http://piaofang.maoyan.com/netmovie/']
         urls = []
-        for url_prfix in range(self.movie_max_id ,1203491):
+        for url_prfix in range(self.movie_max_id ,1303491):
             urls.append(f'http://piaofang.maoyan.com/netmovie/{url_prfix}/allbox')
         
         for url in urls:
