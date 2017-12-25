@@ -73,7 +73,8 @@ class MovieSpider(scrapy.Spider):
             data['sumBox'] = data['sumBox'].replace('万', '')
             data['weeklyBox'] = data['weeklyBox'].replace('万', '')
             data['_id'] = data['movieId']
-            yield scrapy.Request(url=self.piaofang_host + range_item['detail_uri'].format(**data), callback=self.boxRank_parse_movie, meta=dict(range_item=range_item, data=data))
+            if data['movieId'] != -1:
+                yield scrapy.Request(url=self.piaofang_host + range_item['detail_uri'].format(**data), callback=self.boxRank_parse_movie, meta=dict(range_item=range_item, data=data))
 
     def boxRank_parse_movie(self, response):
         data = response.meta['data']
@@ -146,7 +147,8 @@ class MovieSpider(scrapy.Spider):
         for data in data_list:
             data['type'] = range_item['type']
             data['_id'] = data['movieId']
-            yield scrapy.Request(url=self.piaofang_host + range_item['detail_uri'].format(**data), callback=self.boxoffice_parse_movie, meta=dict(range_item=range_item, data=data))
+            if data['movieId'] != -1:
+                yield scrapy.Request(url=self.piaofang_host + range_item['detail_uri'].format(**data), callback=self.boxoffice_parse_movie, meta=dict(range_item=range_item, data=data))
 
     def boxoffice_parse_movie(self, response):
         data = response.meta['data']
@@ -168,7 +170,6 @@ class MovieSpider(scrapy.Spider):
         
         data['cinema_data'] = response.xpath(
             "//div[@class='info-release']//span[@class='score-info ellipsis-1']/text()").extract_first()
-        print(data['cinema_data'])
         data['cinema_data'] = data['cinema_data'][:10] or data['cinema_data']
         data['wish_num'] = response.xpath(
             '//span[@class="info-wish-num"]/text()').extract_first()
@@ -208,7 +209,6 @@ class MovieSpider(scrapy.Spider):
                                   for daypiao in dash_days_piaofang]
             # dict(zip(
             # dash_days_headers, dash_days_piaofang))
-            print(dash_days_headers, dash_days_piaofang)
             tmp_dash_data.append({'date': dash_days[i], 'val': [{dash_days_headers[j]: dash_days_piaofang[j]} for j in range(len(dash_days_headers))] })
 
         data['dash'] = tmp_dash_data
@@ -224,7 +224,8 @@ class MovieSpider(scrapy.Spider):
         for data in data_list:
             data['_id'] = data['seriesId']
             data['type'] = range_item['type']
-            yield scrapy.Request(url=self.piaofang_host + range_item['detail_uri'].format(**data), callback=self.seriesTopRank_parse_movie, meta=dict(range_item=range_item, data=data))
+            if data['seriesId'] != -1:
+                yield scrapy.Request(url=self.piaofang_host + range_item['detail_uri'].format(**data), callback=self.seriesTopRank_parse_movie, meta=dict(range_item=range_item, data=data))
 
     def seriesTopRank_parse_movie(self, response):
         data = response.meta['data']
