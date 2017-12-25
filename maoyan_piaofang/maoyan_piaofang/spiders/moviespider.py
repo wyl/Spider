@@ -6,7 +6,6 @@ import sys
 from lxml import etree
 from datetime import datetime, timedelta
 
-
 class MovieSpider(scrapy.Spider):
     name = 'movie'
     allowed_domains = ['piaofang.maoyan.com', 'box.maoyan.com']
