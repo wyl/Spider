@@ -43,9 +43,7 @@ class MovieSpider(scrapy.Spider):
     def start_requests(self):
 
         range_days = []
-        print(self.ins_days)
-        print((range(1, self.ins_days)[::-1]))
-        for ins_day in (range(1, self.ins_days)[:4][::-1]):
+        for ins_day in (range(1, self.ins_days)[::-1]):
             date = (datetime.now() - timedelta(days=ins_day)
                     ).strftime('%Y-%m-%d')
             smart_date = (datetime.now() - timedelta(days=ins_day)
@@ -57,7 +55,7 @@ class MovieSpider(scrapy.Spider):
                 format_unurl = format_unurl.format( **tt)
                 kind['unurl'] = format_unurl
                 range_days.append(kind)
-        
+        print(range_days) 
         for range_item in range_days:
             yield scrapy.Request(url=self.box_host + range_item['unurl'], callback=range_item['parse'], meta=dict(range_item=range_item))
 
