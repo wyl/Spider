@@ -1,5 +1,6 @@
 import json
 import scrapy
+import copy
 import requests
 import os
 import sys
@@ -42,18 +43,21 @@ class MovieSpider(scrapy.Spider):
     def start_requests(self):
 
         range_days = []
-        for ins_day in (range(1, self.ins_days)[::-1]):
+        print(self.ins_days)
+        print((range(1, self.ins_days)[::-1]))
+        for ins_day in (range(1, self.ins_days)[:4][::-1]):
             date = (datetime.now() - timedelta(days=ins_day)
                     ).strftime('%Y-%m-%d')
             smart_date = (datetime.now() - timedelta(days=ins_day)
                           ).strftime('%Y%m%d')
+            tt= dict(date=date, smart_date=smart_date, ins_day= ins_day) 
             for category in self.scrawl_category:
-
-                format_unurl = category['unurl'].format(
-                    ** dict(date=date, smart_date=smart_date))
-                category['unurl'] = format_unurl
-                range_days.append(category)
-        print(range_days)
+                kind = copy.copy(category)
+                format_unurl = kind['unurl']
+                format_unurl = format_unurl.format( **tt)
+                kind['unurl'] = format_unurl
+                range_days.append(kind)
+        
         for range_item in range_days:
             yield scrapy.Request(url=self.box_host + range_item['unurl'], callback=range_item['parse'], meta=dict(range_item=range_item))
 
