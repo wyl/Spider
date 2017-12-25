@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 
 class MovieSpider(scrapy.Spider):
     name = 'movie'
-    allowed_domains = ["piaofang.maoyan.com"]
+    allowed_domains = ['piaofang.maoyan.com', 'box.maoyan.com']
 
     def __init__(self, movie_max_id=1):
         start_date = datetime.strptime("2017-08-01", "%Y-%m-%d")
@@ -17,26 +17,27 @@ class MovieSpider(scrapy.Spider):
 
         self.ins_days = (end_date - start_date).days
 
-        self.maoyan_host = 'https://box.maoyan.com'
+        self.box_host = 'https://box.maoyan.com'
+        self.piaofang_host = 'https://piaofang.maoyan.com'
 
         self.scrawl_category = [
             # https://box.maoyan.com/proseries/api/netmovie/boxRank.json?date=20171220
             # https://piaofang.maoyan.com/netmovie/1212613/allbox
             # https://piaofang.maoyan.com/netmovie/1212613
             {'type': 'netmovie', 'unurl': '/proseries/api/netmovie/boxRank.json?date={smart_date}',
-                'detail_uri': '/netmovie/{id}', 'detail_box_uri': '/netmovie/{id}/allbox', 'parse': self.boxRank_parse},
+                'detail_uri': '/netmovie/{_id}', 'detail_box_uri': '/netmovie/{_id}/allbox', 'parse': self.boxRank_parse},
             # https://box.maoyan.com/promovie/api/mojo/boxoffice.json?year=0&week=0&day=20171220
             # https://piaofang.maoyan.com/movie/247948/boxshowna
             # https://piaofang.maoyan.com/movie/247948
             {'type': 'america', 'unurl': '/promovie/api/mojo/boxoffice.json?year=0&week=0&day={smart_date}',
-                'detail_uri': '/movie/{id}', 'detail_box_uri': '/movie/{id}/boxshowna', 'parse': self.boxoffice_parse},
+                'detail_uri': '/movie/{_id}', 'detail_box_uri': '/movie/{_id}/boxshowna', 'parse': self.boxoffice_parse},
             # https://box.maoyan.com/proseries/api/seriesTopRank.json?date=2017-12-22&seriesType=2
             # https://piaofang.maoyan.com/tv/1208562/viewCount
-            # https://piaofang.maoyan.com/tv/1208562
+            # # https://piaofang.maoyan.com/tv/1208562
             {'type': 'zongyi', 'unurl': '/proseries/api/seriesTopRank.json?date={date}&seriesType=2',
-                'detail_uri': '/tv/{id}', 'detail_box_uri': '/tv/{id}/viewCount', 'parse': self.seriesTopRank_parse},
+                'detail_uri': '/tv/{_id}', 'detail_box_uri': '/tv/{_id}/viewCount', 'parse': self.seriesTopRank_parse},
             {'type': 'wangluoju', 'unurl': '/proseries/api/seriesTopRank.json?date={date}&seriesType=1',
-                'detail_uri': '/tv/{id}', 'detail_box_uri': '/tv{id}/viewCount', 'parse': self.seriesTopRank_parse},
+                'detail_uri': '/tv/{_id}', 'detail_box_uri': '/tv{_id}/viewCount', 'parse': self.seriesTopRank_parse},
         ]
 
     def start_requests(self):
@@ -56,31 +57,30 @@ class MovieSpider(scrapy.Spider):
                 range_days.append(category)
 
         for range_item in range_days[:4]:
-            yield scrapy.Request(url=self.maoyan_host + range_item['unurl'], callback=range_item['parse'], meta=dict(range_item=range_item))
+            yield scrapy.Request(url=self.box_host + range_item['unurl'], callback=range_item['parse'], meta=dict(range_item=range_item))
 
-
-    #https://box.maoyan.com/proseries/api/netmovie/boxRank.json?date=20171220
+    # https://box.maoyan.com/proseries/api/netmovie/boxRank.json?date=20171220
     def boxRank_parse(self, response):
         range_item = response.meta['range_item']
         print('boxRank_parse')
         print(dir(response))
         content = response.text
-        
+
         datas = json.loads(content)
-        
+
         for data in datas['data']:
             data['type'] = range_item['type']
             del data['dailyBoxV2']
-            data['sumBox'] = data['sumBox'].replace('万' , '')
-            data['weeklyBox'] = data['weeklyBox'].replace('万' , '')
+            data['sumBox'] = data['sumBox'].replace('万', '')
+            data['weeklyBox'] = data['weeklyBox'].replace('万', '')
             data['_id'] = data['movieId']
-            yield scrapy.Request(url= self.maoyan_host +  range_item['detail_uri'].format(**data) , callback=self.boxRank_parse_movie, meta = dict(range_item = range_item , data = data))    
+            yield scrapy.Request(url=self.piaofang_host + range_item['detail_uri'].format(**data), callback=self.boxRank_parse_movie, meta=dict(range_item=range_item, data=data))
 
-    def boxRank_parse_movie(self,resposne):
-        data  = response.meta['data']
+    def boxRank_parse_movie(self, response):
+        data = response.meta['data']
         range_item = response.meta['range_item']
 
-        #if response.status in [404, 500, 403] :
+        # if response.status in [404, 500, 403] :
         #    yield scrapy.Request(url=response.url, callback=self.parse)
 
         has_next = response.xpath(
@@ -105,147 +105,177 @@ class MovieSpider(scrapy.Spider):
         data['description'] = response.xpath(
             "//div[@class='detail-block-content']/text()").extract_first()
         data['create_date'] = datetime.now()
-        
-        yield scrapy.Request(url= self.maoyan_host +  range_item['detail_box_uri'].format(**data) , callback=self.boxRank_parse_allbox, meta = dict(range_item = range_item , data = data))    
-        
-    def  boxRank_parse_allbox(self,response):
-        data  = response.meta['data']
+
+        yield scrapy.Request(url=self.piaofang_host + range_item['detail_box_uri'].format(**data), callback=self.boxRank_parse_allbox, meta=dict(range_item=range_item, data=data))
+
+    def boxRank_parse_allbox(self, response):
+        data = response.meta['data']
         range_item = response.meta['range_item']
-        
+
         dash_days = response.xpath(
             "//div[@class='t-table']/div[@class='t-left']/div[@class='t-row']/@data-id")
-        dash_days_piaofang = response.xpath(
-            "//div[@class='t-table']/div[@class='t-right t-scroller']//div[@class='t-row']/div//text()")
+
         dash_days = [day.extract() for day in dash_days]
-        dash_days_piaofang = [daypiao.extract() for daypiao in dash_days_piaofang]
-        #tmp_dash_data =dict( 
+        # tmp_dash_data =dict(
         #        zip([day.extract() for day in dash_days], [daypiao.extract() for daypiao in dash_days_piaofang])
         #)
         tmp_dash_data = []
         for i in range(0, len(dash_days)):
-            tmp_dash_data.append({'date': dash_days[i] , 'val' : dash_days_piaofang })
+            tr_row = i + 1
+            dash_days_piaofang = response.xpath(
+                f"//div[@class='t-table']/div[@class='t-right t-scroller']//div[@class='t-row'][{tr_row}]/div//text()")
+            dash_days_piaofang = [daypiao.extract()
+                                  for daypiao in dash_days_piaofang]
+            tmp_dash_data.append(
+                {'date': dash_days[i], 'val': dash_days_piaofang})
 
         data['dash'] = tmp_dash_data
         data['un_url_1'] = response.url
         yield data
 
-
-    #https://box.maoyan.com/promovie/api/mojo/boxoffice.json?year=0&week=0&day=20171220
+    # https://box.maoyan.com/promovie/api/mojo/boxoffice.json?year=0&week=0&day=20171220
     # https://box.maoyan.com/promovie/api/mojo/boxoffice.json?year=0&week=0&day=20171220
     # https://piaofang.maoyan.com/movie/247948/boxshowna
     # https://piaofang.maoyan.com/movie/247948
-    
+
     def boxoffice_parse(self, response):
         range_item = response.meta['range_item']
-        req_data = response.json()
+        content = response.text
+        req_data = json.loads(content)
         data_list = req_data['data']['boxList']
-        
+
         for data in data_list:
             data['type'] = range_item['type']
             data['_id'] = data['movieId']
-            yield scrapy.Request(url= self.maoyan_host +  range_item['detail_uri'].format(**data) , callback=self.boxoffice_movie, meta = dict(range_item = range_item , data = data))    
+            yield scrapy.Request(url=self.piaofang_host + range_item['detail_uri'].format(**data), callback=self.boxoffice_parse_movie, meta=dict(range_item=range_item, data=data))
 
-    
-    def boxoffice_parse_movie(self,response):
+    def boxoffice_parse_movie(self, response):
+        data = response.meta['data']
+        range_item = response.meta['range_item']
+
         data['un_url'] = response.url
         data['name'] = response.xpath(
             "//p[@class='info-title']/span/text()").extract_first()
-        data['enname'] = response.xpath("//p[@class='info-etitle']/text()").extract_first()
+        data['enname'] = response.xpath(
+            "//p[@class='info-etitle']/text()").extract_first()
+        info_category = response.xpath(
+            "//p[@class='info-category']/text()").extract_first().strip()
 
-        data['category'] = response.xpath(
-            "//span[@class='info-category']/text()").extract_first().strip().split(',')
-        
+        data['category'] =info_category.split(',')
+        data['category_tag'] = response.xpath('//span[@class="info-tag"]').extract_first()
+
         data['tag'] = response.xpath(
             "//span[@class='info-tag']/text()").extract_first()
-        data['cinema_data'] = response.xpath(
-            "//p[@class='info-release']/span[@class='score-info ellipsis-1']/text()").extract_first()
-        data['cinema_data'] = data['cinema_data'][:10] or data['cinema_data']
-        data['wish_num'] = response.xpath('//span[@class="info-wish-num"]/text()').extract_first()
-        data['persona_line_male'] = response.xpath('//div[class="persona-line-item male"]/div[class="persona-item-value"]/text()').extract_first()
-        data['persona_line_female'] = response.xpath('//div[class="persona-line-item female"]/div[class="persona-item-value"]/text()').extract_first()
         
+        data['cinema_data'] = response.xpath(
+            "//div[@class='info-release']//span[@class='score-info ellipsis-1']/text()").extract_first()
+        print(data['cinema_data'])
+        data['cinema_data'] = data['cinema_data'][:10] or data['cinema_data']
+        data['wish_num'] = response.xpath(
+            '//span[@class="info-wish-num"]/text()').extract_first()
+        data['persona_line_male'] = response.xpath(
+            '//div[class="persona-line-item male"]/div[class="persona-item-value"]/text()').extract_first()
+        data['persona_line_female'] = response.xpath(
+            '//div[class="persona-line-item female"]/div[class="persona-item-value"]/text()').extract_first()
+
         data['year'] = data['cinema_data'][:4] if data['cinema_data'] else None
         data['un_url'] = response.url
         data['create_date'] = datetime.now()
-        yield scrapy.Request(url= self.maoyan_host +  range_item['detail_box_uri'].format(**data) , callback=self.boxoffice_parse_movie_boxshowna, meta = dict(range_item = range_item , data = data))    
+        yield scrapy.Request(url=self.piaofang_host + range_item['detail_box_uri'].format(**data), callback=self.boxoffice_parse_movie_boxshowna, meta=dict(range_item=range_item, data=data))
 
-    def boxoffice_parse_movie_boxshowna(self,response):
-        data  = response.meta['data']
+    def boxoffice_parse_movie_boxshowna(self, response):
+        data = response.meta['data']
         range_item = response.meta['range_item']
         dash_days = response.xpath(
             "//div[@class='t-table']/div[@class='t-left']/div[@class='t-row']/@data-id")
         dash_days_piaofang = response.xpath(
             "//div[@class='t-table']/div[@class='t-right t-scroller']//div[@class='t-row']/div/text()")
         dash_days = [day.extract() for day in dash_days]
-        dash_days_piaofang = [daypiao.extract() for daypiao in dash_days_piaofang]
-        #tmp_dash_data =dict( 
+        dash_days_piaofang = [daypiao.extract()
+                              for daypiao in dash_days_piaofang]
+        # tmp_dash_data =dict(
         #        zip([day.extract() for day in dash_days], [daypiao.extract() for daypiao in dash_days_piaofang])
         #)
 
         dash_days_headers = response.xpath(
-                "//div[@class='t-table']/div[@class='t-right t-scroller']//div[@class='t-header']//div/text()").extract()
+            "//div[@class='t-table']/div[@class='t-right t-scroller']//div[@class='t-header']//div/text()").extract()
+        dash_days_headers = [item.strip() for item in dash_days_headers if item.strip()][::2]
         tmp_dash_data = []
         for i in range(0, len(dash_days)):
-            
+            tr_row = i + 1
             dash_days_piaofang = response.xpath(
-                f"//div[@class='t-table']/div[@class='t-right t-scroller']//div[@class='t-row'][{i}]/div/text()")
-            dash_days_piaofang = [daypiao.extract() for daypiao in dash_days_piaofang]
-            tmp_dash_data.append({'date': dash_days[i] , 'val' : dict(dash_days_headers , dash_days_piaofang) })
+                f"//div[@class='t-table']/div[@class='t-right t-scroller']//div[@class='t-row'][{tr_row}]/div/text()")
+            dash_days_piaofang = [daypiao.extract()
+                                  for daypiao in dash_days_piaofang]
+            # dict(zip(
+            # dash_days_headers, dash_days_piaofang))
+            print(dash_days_headers, dash_days_piaofang)
+            tmp_dash_data.append({'date': dash_days[i], 'val': [{dash_days_headers[j]: dash_days_piaofang[j]} for j in range(len(dash_days_headers))] })
 
         data['dash'] = tmp_dash_data
         data['un_url_1'] = response.url
         yield data
 
-
-
-    #https://box.maoyan.com/proseries/api/seriesTopRank.json?date=2017-12-22&seriesType=2
+    # https://box.maoyan.com/proseries/api/seriesTopRank.json?date=2017-12-22&seriesType=2
     def seriesTopRank_parse(self, response):
         range_item = response.meta['range_item']
-        req_data = response.json()
+        content = response.text
+        req_data =  json.loads(content)
         data_list = req_data['data']['seriesDailyRankList']
         for data in data_list:
             data['_id'] = data['seriesId']
             data['type'] = range_item['type']
-            yield scrapy.Request(url= self.maoyan_host +  range_item['detail_uri'].format(**data) , callback=self.boxoffice_movie, meta = dict(range_item = range_item , data = data))    
+            yield scrapy.Request(url=self.piaofang_host + range_item['detail_uri'].format(**data), callback=self.seriesTopRank_parse_movie, meta=dict(range_item=range_item, data=data))
 
-    def seriesTopRank_parse_movie(self,response):
-        data  = response.meta['data']
+    def seriesTopRank_parse_movie(self, response):
+        data = response.meta['data']
         range_item = response.meta['range_item']
-        
+
         data['un_url'] = response.url
-        data['name'] = response.xpath('//p[@class="info-title"]/text()').extract_first()
-        data['category'] = response.xpath('//span[@class="tv-types"]/text()').extract_first()
-        data['bunch'] = response.xpath('//span[contains(text(), "集数")]/text()').extract_first(default='')
-        data['bunch_minute'] = response.xpath('//span[contains(text(), "(每集")]/text()').extract_first(default='')
+        data['name'] = response.xpath(
+            '//p[@class="info-title"]/text()').extract_first()
+        data['category'] = response.xpath(
+            '//span[@class="tv-types"]/text()').extract_first()
+        data['bunch'] = response.xpath(
+            '//span[contains(text(), "集数")]/text()').extract_first(default='')
+        data['bunch_minute'] = response.xpath(
+            '//span[contains(text(), "(每集")]/text()').extract_first(default='')
 
-        data['platform'] = response.xpath('//[@class="platform-section"]')
-        data['actor'] = response.xpath('//div[@class="sticky-container"]//div[@class="hc-layout"]/div[@class="category"]/div[@class="items"]//a/div/p/text()').extract()
-        data['description'] = response.xpath('//div[@class="detail-block-content"]/text()').extract_first()
+        data['platform'] = response.xpath('//div[@class="p-distribute"]//tbody//tr/td[1]/text()').extract_first()
+        data['platform_view'] = response.xpath('//div[@class="p-distribute"]//tbody//tr/td[2]/text()').extract_first()
+        data['actor'] = response.xpath(
+            '//div[@class="sticky-container"]//div[@class="hc-layout"]/div[@class="category"]/div[@class="items"]//a/div/p/text()').extract()
+        data['description'] = response.xpath(
+            '//div[@class="detail-block-content"]/text()').extract_first()
         data['create_date'] = datetime.now()
-        yield scrapy.Request(url= self.maoyan_host +  range_item['detail_box_uri'].format(**data) , callback=self.seriesTopRank_parse_movie_viewCount, meta = dict(range_item = range_item , data = data))    
-    
-    def seriesTopRank_parse_movie_viewCount(self,response):
-        data  = response.meta['data']
+        yield scrapy.Request(url=self.piaofang_host + range_item['detail_box_uri'].format(**data), callback=self.seriesTopRank_parse_movie_viewCount, meta=dict(range_item=range_item, data=data))
+
+    def seriesTopRank_parse_movie_viewCount(self, response):
+        data = response.meta['data']
         range_item = response.meta['range_item']
-        
+
         dash_days = response.xpath(
             "//div[@class='t-table']/div[@class='t-left']/div[@class='t-row']/@data-id")
         dash_days_piaofang = response.xpath(
             "//div[@class='t-table']/div[@class='t-right t-scroller']//div[@class='t-row']/div/text()")
         dash_days = [day.extract() for day in dash_days]
-        dash_days_piaofang = [daypiao.extract() for daypiao in dash_days_piaofang]
-        #tmp_dash_data =dict( 
+        dash_days_piaofang = [daypiao.extract()
+                              for daypiao in dash_days_piaofang]
+        # tmp_dash_data =dict(
         #        zip([day.extract() for day in dash_days], [daypiao.extract() for daypiao in dash_days_piaofang])
         #
         dash_days_headers = response.xpath(
-                "//div[@class='t-table']/div[@class='t-right t-scroller']//div[@class='t-header']//div/text()").extract()
+            "//div[@class='t-table']/div[@class='t-right t-scroller']//div[@class='t-header']//div/text()").extract()
+        dash_days_headers =[ item.strip() for item in dash_days_headers if item.strip() ][::2]
         tmp_dash_data = []
+
         for i in range(0, len(dash_days)):
-            
+            tr_row = i + 1
             dash_days_piaofang = response.xpath(
-                f"//div[@class='t-table']/div[@class='t-right t-scroller']//div[@class='t-row'][{i}]/div/text()")
-            dash_days_piaofang = [daypiao.extract() for daypiao in dash_days_piaofang]
-            tmp_dash_data.append({'date': dash_days[i] , 'val' : dict(dash_days_headers , dash_days_piaofang) })
+                f"//div[@class='t-table']/div[@class='t-right t-scroller']//div[@class='t-row'][{tr_row}]/div/text()")
+            dash_days_piaofang = [daypiao.extract()
+                                  for daypiao in dash_days_piaofang]
+            tmp_dash_data.append({'date': dash_days[i], 'val': [{dash_days_headers[j]: dash_days_piaofang[j]} for j in range(len(dash_days_headers))] })
 
         data['un_url_1'] = response.url
         data['dash'] = tmp_dash_data
