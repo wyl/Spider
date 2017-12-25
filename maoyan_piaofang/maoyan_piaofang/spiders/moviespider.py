@@ -42,8 +42,7 @@ class MovieSpider(scrapy.Spider):
     def start_requests(self):
 
         range_days = []
-
-        for ins_day in (range(1, self.ins_days)[:4][::-1]):
+        for ins_day in (range(1, self.ins_days)[::-1]):
             date = (datetime.now() - timedelta(days=ins_day)
                     ).strftime('%Y-%m-%d')
             smart_date = (datetime.now() - timedelta(days=ins_day)
@@ -54,8 +53,8 @@ class MovieSpider(scrapy.Spider):
                     ** dict(date=date, smart_date=smart_date))
                 category['unurl'] = format_unurl
                 range_days.append(category)
-
-        for range_item in range_days[:4]:
+        print(range_days)
+        for range_item in range_days:
             yield scrapy.Request(url=self.box_host + range_item['unurl'], callback=range_item['parse'], meta=dict(range_item=range_item))
 
     # https://box.maoyan.com/proseries/api/netmovie/boxRank.json?date=20171220
