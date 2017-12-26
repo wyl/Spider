@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import os
 # Scrapy settings for maoyan_piaofang project
 #
 # For simplicity, this file contains only settings considered important or
@@ -97,7 +97,10 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.Fil
 # esystemCacheStorage'
 
-MONGO_URI = 'mongodb://proxy_mongo_host:27017'
+
+#MONGO_URI = 'mongodb://proxy_mongo_host:27017'
+
+MONGO_URI = os.getenv('PROXY_POOL_MONGO')
 MONGO_DATABASE = 'piaofang'
 MONGO_TABLE = 'maoyan' 
 
