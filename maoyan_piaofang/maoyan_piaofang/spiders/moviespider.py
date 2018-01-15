@@ -12,7 +12,7 @@ class MovieSpider(scrapy.Spider):
     allowed_domains = ['piaofang.maoyan.com', 'box.maoyan.com']
 
     def __init__(self, movie_max_id=1):
-        start_date = datetime.strptime("2017-08-01", "%Y-%m-%d")
+        start_date = datetime.strptime("2017-08-25", "%Y-%m-%d")
         end_date = datetime.now()
 
         self.ins_days = (end_date - start_date).days
@@ -21,23 +21,23 @@ class MovieSpider(scrapy.Spider):
         self.piaofang_host = 'https://piaofang.maoyan.com'
 
         self.scrawl_category = [
-            # https://box.maoyan.com/proseries/api/netmovie/boxRank.json?date=20171220
-            # https://piaofang.maoyan.com/netmovie/1212613/allbox
-            # https://piaofang.maoyan.com/netmovie/1212613
+                # https://box.maoyan.com/proseries/api/netmovie/boxRank.json?date=20171220
+                # https://piaofang.maoyan.com/netmovie/1212613/allbox
+                # https://piaofang.maoyan.com/netmovie/1212613
             {'type': 'netmovie', 'unurl': '/proseries/api/netmovie/boxRank.json?date={smart_date}',
                 'detail_uri': '/netmovie/{_id}', 'detail_box_uri': '/netmovie/{_id}/allbox', 'parse': self.boxRank_parse},
-            # https://box.maoyan.com/promovie/api/mojo/boxoffice.json?year=0&week=0&day=20171220
-            # https://piaofang.maoyan.com/movie/247948/boxshowna
-            # https://piaofang.maoyan.com/movie/247948
+                # https://box.maoyan.com/promovie/api/mojo/boxoffice.json?year=0&week=0&day=20171220
+                # https://piaofang.maoyan.com/movie/247948/boxshowna
+                # https://piaofang.maoyan.com/movie/247948
             {'type': 'america', 'unurl': '/promovie/api/mojo/boxoffice.json?year=0&week=0&day={smart_date}',
-                'detail_uri': '/movie/{_id}', 'detail_box_uri': '/movie/{_id}/boxshowna', 'parse': self.boxoffice_parse},
-            # https://box.maoyan.com/proseries/api/seriesTopRank.json?date=2017-12-22&seriesType=2
-            # https://piaofang.maoyan.com/tv/1208562/viewCount
-            # # https://piaofang.maoyan.com/tv/1208562
+                'detail_uri': '/movie/{_id}', 'detail_box_uri': '/movie/{_id}/boxshowna',  'section_box_uri': '/movie/{_id}/moresections', 'parse': self.boxoffice_parse},
+                # https://box.maoyan.com/proseries/api/seriesTopRank.json?date=2017-12-22&seriesType=2
+                # https://piaofang.maoyan.com/tv/1208562/viewCount
+                # # https://piaofang.maoyan.com/tv/1208562
             {'type': 'zongyi', 'unurl': '/proseries/api/seriesTopRank.json?date={date}&seriesType=2',
                 'detail_uri': '/tv/{_id}', 'detail_box_uri': '/tv/{_id}/viewCount', 'parse': self.seriesTopRank_parse},
             {'type': 'wangluoju', 'unurl': '/proseries/api/seriesTopRank.json?date={date}&seriesType=1',
-                'detail_uri': '/tv/{_id}', 'detail_box_uri': '/tv{_id}/viewCount', 'parse': self.seriesTopRank_parse},
+                'detail_uri': '/tv/{_id}', 'detail_box_uri': '/tv/{_id}/viewCount', 'parse': self.seriesTopRank_parse},
         ]
 
     def start_requests(self):
@@ -55,7 +55,8 @@ class MovieSpider(scrapy.Spider):
                 format_unurl = format_unurl.format( **tt)
                 kind['unurl'] = format_unurl
                 range_days.append(kind)
-        print(range_days) 
+        
+        print(f' start ... need ',  len(range_days))
         for range_item in range_days:
             yield scrapy.Request(url=self.box_host + range_item['unurl'], callback=range_item['parse'], meta=dict(range_item=range_item))
 
@@ -63,7 +64,6 @@ class MovieSpider(scrapy.Spider):
     def boxRank_parse(self, response):
         range_item = response.meta['range_item']
         print('boxRank_parse')
-        print(dir(response))
         content = response.text
 
         datas = json.loads(content)
@@ -94,6 +94,8 @@ class MovieSpider(scrapy.Spider):
             "//span[@class='info-subtype ellipsis-1']/text()").extract_first()
         data['tag'] = response.xpath(
             "//span[@class='info-tag center']/text()").extract_first()
+        data['duration'] = response.xpath("//p[@class='info-duration ellipsis-1']/text")
+        data['duration']  = data['duration'].replace('分钟', '') if data['duration'] else '-'
         data['cinema_data'] = response.xpath(
             "//p[@class='info-release ellipsis-1']/text()").extract_first()
         data['cinema_data'] = datetime.strptime(
@@ -139,15 +141,17 @@ class MovieSpider(scrapy.Spider):
         info_category = response.xpath(
             "//p[@class='info-category']/text()").extract_first().strip()
 
-        data['category'] =info_category.split(',')
+        data['category'] =info_category
         data['category_tag'] = response.xpath('//span[@class="info-tag"]').extract_first()
 
         data['tag'] = response.xpath(
             "//span[@class='info-tag']/text()").extract_first()
         
+        data['rating_num'] = response.xpath('//span[@class="rating-num"]/text()').extract_first() 
+
         data['cinema_data'] = response.xpath(
             "//div[@class='info-release']//span[@class='score-info ellipsis-1']/text()").extract_first()
-        data['cinema_data'] = data['cinema_data'][:10] or data['cinema_data']
+        data['cinema_data'] = data['cinema_data'][:10] if data['cinema_data'] else data['cinema_data']
         data['wish_num'] = response.xpath(
             '//span[@class="info-wish-num"]/text()').extract_first()
         data['persona_line_male'] = response.xpath(
@@ -158,9 +162,82 @@ class MovieSpider(scrapy.Spider):
         data['year'] = data['cinema_data'][:4] if data['cinema_data'] else None
         data['un_url'] = response.url
         data['create_date'] = datetime.now()
+
+        yield scrapy.Request(url=self.piaofang_host + range_item['section_box_uri'].format(**data), callback=self.boxoffice_moresections, meta=dict(range_item=range_item, data=data))
+
+    def boxoffice_moresections(self,response ):
+
+        data = response.meta['data']
+        range_item = response.meta['range_item'] 
+        req_data =json.loads(response.text)
+        sections = req_data['sections']
+        ## ['americadigestSection', 'celebritySection', 'companySection', 'detailSection', 'techSection']
+        data['sections_url'] = response.url
+        data['studio'] = {}
+        data['tech_param'] = {}
+        data['abox'] = {}
+        data['company'] = {}
+        if 'americadigestSection'  in sections:
+            html_content = req_data['sectionHTMLs']['americadigestSection']['html']
+            if html_content:
+                section_tree = etree.HTML(html_content)
+                imdb_score = section_tree.xpath('//div[@class="nai-val"]/text()')
+                imdb_score = imdb_score.pop() if imdb_score else 0
+                imdb_box = section_tree.xpath('//div[@class="na-total"]/text()')
+                imdb_box = imdb_box.pop() if imdb_box else 0 
+
+                data['imdb_score'] = imdb_score
+                data['imdb_box'] = imdb_box
+                categorys = section_tree.xpath('//div[@class="abox-block"]')
+
+                for category in categorys:
+                    _type = category.xpath('div[@class="abox-title"]/text()').pop()
+                    _val = ''.join(category.xpath('div[@class="abox-value"]//text()'))
+                    
+                    data['abox'].update(dict([( _type,  _val)]))
+
+        if 'celebritySection' in sections:
+            html_content = req_data['sectionHTMLs']['celebritySection']['html']
+            if html_content:
+                section_tree = etree.HTML(html_content)
+                categorys = section_tree.xpath('//div[@class="category"]')
+                for category in categorys:
+                    studio_type = category.xpath('div[@class="cat-header"]/h2/text()').pop()
+                    studio_val = category.xpath('div[@class="items"]//p/text()')
+                    data['studio'].update(dict([(studio_type,  studio_val)]))
+
+        if 'companySection' in sections:
+            html_content = req_data['sectionHTMLs']['companySection']['html']
+            if html_content:
+                section_tree = etree.HTML(html_content)
+                categorys = section_tree.xpath('//div[@class="category"]')
+
+                for category in categorys:
+                    studio_type = category.xpath('div[@class="cat-header"]/h2/text()').pop()
+                    studio_val = category.xpath('div[@class="items"]//p/text()')
+                    data['company'].update(dict([( studio_type, studio_val)]))
+
+        if 'detailSection' in sections:
+            html_content = req_data['sectionHTMLs']['detailSection']['html']
+            if html_content:
+                section_tree = etree.HTML(html_content)
+                description = section_tree.xpath('//div[@class="detail-block-content"]/text()')
+                data['description'] = description
+
+        if 'techSection' in sections:
+            html_content = req_data['sectionHTMLs']['techSection']['html']
+            if html_content:
+                section_tree = etree.HTML(html_content)
+                categorys = section_tree.xpath('//div[@class="ts-line"]')
+
+                for category in categorys:
+                    tech_type = category.xpath('div[@class="ts-line-l"]/text()').pop()
+                    tech_val = category.xpath('div[@class="ts-line-r"]/text()').pop()
+                    data['tech_param'].update(dict([( tech_type, tech_val)]))
+
         yield scrapy.Request(url=self.piaofang_host + range_item['detail_box_uri'].format(**data), callback=self.parse_movie_fullbox, meta=dict(range_item=range_item, data=data))
-    
-    
+
+
     # https://box.maoyan.com/proseries/api/seriesTopRank.json?date=2017-12-22&seriesType=2
     def seriesTopRank_parse(self, response):
         range_item = response.meta['range_item']
@@ -170,6 +247,10 @@ class MovieSpider(scrapy.Spider):
         for data in data_list:
             data['_id'] = data['seriesId']
             data['type'] = range_item['type']
+
+            if 'releaseInfo' in  data:
+                data['releaseInfo'] = data['releaseInfo'].replace('上线','')
+
             if data['seriesId'] != -1:
                 yield scrapy.Request(url=self.piaofang_host + range_item['detail_uri'].format(**data), callback=self.seriesTopRank_parse_movie, meta=dict(range_item=range_item, data=data))
 

@@ -100,7 +100,9 @@ ITEM_PIPELINES = {
 
 #MONGO_URI = 'mongodb://proxy_mongo_host:27017'
 
+
 MONGO_URI = os.getenv('PROXY_POOL_MONGO')
+
 MONGO_DATABASE = 'piaofang'
 MONGO_TABLE = 'maoyan' 
 
