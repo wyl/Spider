@@ -89,7 +89,7 @@ class MovieSpider(scrapy.Spider):
 
         data['un_url'] = response.url
         data['name'] = response.xpath(
-            "//p[@class='info-title ellipsis-1']/text()").extract_first()
+            "//p[@class='info-title ellipsis-1']/span/text()").extract_first()
         data['category'] = response.xpath(
             "//span[@class='info-subtype ellipsis-1']/text()").extract_first()
         data['tag'] = response.xpath(
@@ -143,6 +143,9 @@ class MovieSpider(scrapy.Spider):
 
         data['category'] =info_category
         data['category_tag'] = response.xpath('//span[@class="info-tag"]').extract_first()
+        
+        data['source'] = response.xpath('//div[@class="info-source-duration"]/text()').extract_first()
+        data['duration'] = response.xpath('//div[@class="info-source-duration"]/span/text()').extract_first()
 
         data['tag'] = response.xpath(
             "//span[@class='info-tag']/text()").extract_first()
@@ -181,7 +184,7 @@ class MovieSpider(scrapy.Spider):
             html_content = req_data['sectionHTMLs']['americadigestSection']['html']
             if html_content:
                 section_tree = etree.HTML(html_content)
-                imdb_score = section_tree.xpath('//div[@class="nai-val"]/text()')
+                imdb_score = section_tree.xpath('//div[@class="nai-val "]/text()')
                 imdb_score = imdb_score.pop() if imdb_score else 0
                 imdb_box = section_tree.xpath('//div[@class="na-total"]/text()')
                 imdb_box = imdb_box.pop() if imdb_box else 0 
